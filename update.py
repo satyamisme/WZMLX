@@ -61,13 +61,7 @@ if DATABASE_URL is not None:
     ) and config_dict is not None:
         environ["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
         environ["UPSTREAM_BRANCH"] = config_dict["UPSTREAM_BRANCH"]
-        environ["UPGRADE_PACKAGES"] = config_dict.get("UPDATE_PACKAGES", "False")
     conn.close()
-
-UPGRADE_PACKAGES = environ.get("UPGRADE_PACKAGES", "False")
-if UPGRADE_PACKAGES.lower() == "true":
-    packages = [dist.metadata["Name"] for dist in distributions()]
-    scall("uv pip install --system " + " ".join(packages), shell=True)
 
 UPSTREAM_REPO = environ.get("UPSTREAM_REPO", "")
 if len(UPSTREAM_REPO) == 0:

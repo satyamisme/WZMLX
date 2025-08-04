@@ -214,6 +214,11 @@ async def search_images():
             for page in range(1, total_pages + 1):
                 url = f"{base_url}?wallpaper={query}&width=1280&height=720&page={page}"
                 r = rget(url)
+                if r.status_code != 200:
+                    LOGGER.error(
+                        f"Failed to fetch images from {url}. Status code: {r.status_code}"
+                    )
+                    continue
                 soup = BeautifulSoup(r.text, "html.parser")
                 images = soup.select(
                     'img[data-src^="https://c4.wallpaperflare.com/wallpaper"]'
@@ -236,7 +241,7 @@ async def search_images():
                 }
             )
     except Exception as e:
-        LOGGER.error(f"An error occurred: {e}")
+        LOGGER.error(f"An error occurred while searching for images: {e}")
 
 
 async def bot_help(client, message):

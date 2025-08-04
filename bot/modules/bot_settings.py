@@ -94,7 +94,6 @@ bool_vars = [
     "CLEAN_LOG_MSG",
     "USER_TD_MODE",
     "INCOMPLETE_TASK_NOTIFIER",
-    "UPGRADE_PACKAGES",
     "SCREENSHOTS_MODE",
 ]
 
@@ -412,9 +411,6 @@ async def load_config():
     UPSTREAM_REPO = environ.get("UPSTREAM_REPO", "")
     if len(UPSTREAM_REPO) == 0:
         UPSTREAM_REPO = ""
-
-    UPGRADE_PACKAGES = environ.get("UPGRADE_PACKAGES", "")
-    UPGRADE_PACKAGES = UPGRADE_PACKAGES.lower() == "true"
 
     UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH", "")
     if len(UPSTREAM_BRANCH) == 0:
@@ -772,7 +768,6 @@ async def load_config():
             "TORRENT_TIMEOUT": TORRENT_TIMEOUT,
             "UPSTREAM_REPO": UPSTREAM_REPO,
             "UPSTREAM_BRANCH": UPSTREAM_BRANCH,
-            "UPGRADE_PACKAGES": UPGRADE_PACKAGES,
             "USER_SESSION_STRING": USER_SESSION_STRING,
             "USER_TD_MODE": USER_TD_MODE,
             "USER_TD_SA": USER_TD_SA,

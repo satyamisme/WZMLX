@@ -17,7 +17,7 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
-git+https://github.com/zevtyardt/lk21.git
+git+https://github.com/zevtyardt/lk21.git@ac9f3f304cc679ecd37fe9d0e1eab1f8a9ab9f32
 httpx
 langcodes[data]
 lxml
@@ -43,4 +43,7 @@ uv
 uvloop
 xattr
 yt-dlp[default,curl-cffi]
+pytz
+tzlocal
+psycopg2-binary
 pytz

@@ -3,7 +3,8 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex
 from aiohttp import ClientSession
 from html import escape
-from urllib.parse import quote
+from urllib.parse import quote, quote_plus
+from json import loads as json_loads
 
 from bot import bot, LOGGER, config_dict, get_client
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
@@ -28,11 +29,14 @@ async def initiate_search_tools():
     qb_plugins = await sync_to_async(qbclient.search_plugins)
     if SEARCH_PLUGINS := config_dict["SEARCH_PLUGINS"]:
         globals()["PLUGINS"] = []
-        src_plugins = eval(SEARCH_PLUGINS)
-        if qb_plugins:
-            names = [plugin["name"] for plugin in qb_plugins]
-            await sync_to_async(qbclient.search_uninstall_plugin, names=names)
-        await sync_to_async(qbclient.search_install_plugin, src_plugins)
+        try:
+            src_plugins = json_loads(SEARCH_PLUGINS)
+            if src_plugins and qb_plugins:
+                names = [plugin["name"] for plugin in qb_plugins]
+                await sync_to_async(qbclient.search_uninstall_plugin, names=names)
+            await sync_to_async(qbclient.search_install_plugin, src_plugins)
+        except Exception as e:
+            LOGGER.error(e)
     elif qb_plugins:
         for plugin in qb_plugins:
             await sync_to_async(qbclient.search_uninstall_plugin, names=plugin["name"])
@@ -162,7 +166,7 @@ async def __getResult(search_results, key, message, method):
                             msg += f"<a href='{subres['torrent']}'>Direct Link</a><br>"
                         elif "magnet" in subres.keys():
                             msg += "<b>Share Magnet to</b> "
-                            msg += f"<a href='http://t.me/share/url?url={subres['magnet']}'>Telegram</a><br>"
+                            msg += f"<a href='http://t.me/share/url?url={quote_plus(subres['magnet'])}'>Telegram</a><br>"
                     msg += "<br>"
                 else:
                     msg += f"<b>Size: </b>{result['size']}<br>"
@@ -174,7 +178,7 @@ async def __getResult(search_results, key, message, method):
                         msg += f"<a href='{result['torrent']}'>Direct Link</a><br><br>"
                     elif "magnet" in result.keys():
                         msg += "<b>Share Magnet to</b> "
-                        msg += f"<a href='http://t.me/share/url?url={quote(result['magnet'])}'>Telegram</a><br><br>"
+                        msg += f"<a href='http://t.me/share/url?url={quote_plus(result['magnet'])}'>Telegram</a><br><br>"
                     else:
                         msg += "<br>"
             except Exception:
@@ -185,7 +189,7 @@ async def __getResult(search_results, key, message, method):
             msg += f"<b>Seeders: </b>{result.nbSeeders} | <b>Leechers: </b>{result.nbLeechers}<br>"
             link = result.fileUrl
             if link.startswith("magnet:"):
-                msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={quote(link)}'>Telegram</a><br><br>"
+                msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={quote_plus(link)}'>Telegram</a><br><br>"
             else:
                 msg += f"<a href='{link}'>Direct Link</a><br><br>"
 
@@ -280,8 +284,11 @@ async def torrentSearch(_, message):
 async def torrentSearchUpdate(_, query):
     user_id = query.from_user.id
     message = query.message
-    key = message.reply_to_message.text.split(maxsplit=1)
-    key = key[1].strip() if len(key) > 1 else None
+    try:
+        key = message.reply_to_message.text.split(maxsplit=1)
+        key = key[1].strip() if len(key) > 1 else None
+    except:
+        key = None
     data = query.data.split()
     if user_id != int(data[1]):
         await query.answer("Not Yours!", show_alert=True)

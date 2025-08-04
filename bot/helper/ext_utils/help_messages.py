@@ -531,7 +531,6 @@ default_desp = {
     "TORRENT_TIMEOUT": "Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. Int",
     "UPSTREAM_REPO": "Your github repository link, if your repo is private add https://username:{githubtoken}@github.com/{username}/{reponame} format. Get token from Github settings. So you can update your bot from filled repository on each restart.",
     "UPSTREAM_BRANCH": "Upstream branch for update. Default is master.",
-    "UPGRADE_PACKAGES": "Install New Requirements File without thinking of Crash. Bool",
     "SAVE_MSG": "Add button of save message. Bool",
     "SET_COMMANDS": "Set bot command automatically. Bool",
     "JIODRIVE_TOKEN": "Set token for the jiodrive.xyz to download the files. str",

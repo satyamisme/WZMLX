@@ -446,9 +446,6 @@ UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH", "")
 if len(UPSTREAM_BRANCH) == 0:
     UPSTREAM_BRANCH = "master"
 
-UPGRADE_PACKAGES = environ.get("UPGRADE_PACKAGES", "")
-UPGRADE_PACKAGES = UPGRADE_PACKAGES.lower() == "true"
-
 RCLONE_SERVE_URL = environ.get("RCLONE_SERVE_URL", "")
 if len(RCLONE_SERVE_URL) == 0:
     RCLONE_SERVE_URL = ""
@@ -743,7 +740,6 @@ config_dict = {
     "TORRENT_TIMEOUT": TORRENT_TIMEOUT,
     "UPSTREAM_REPO": UPSTREAM_REPO,
     "UPSTREAM_BRANCH": UPSTREAM_BRANCH,
-    "UPGRADE_PACKAGES": UPGRADE_PACKAGES,
     "USER_SESSION_STRING": USER_SESSION_STRING,
     "USER_TD_MODE": USER_TD_MODE,
     "USER_TD_SA": USER_TD_SA,
@@ -804,14 +800,20 @@ if BASE_URL:
         shell=True,
     )
 
-srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
+try:
+    srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
+except FileNotFoundError:
+    log_warning("qBittorrent is not installed. qBittorrent search plugins will not work.")
 if not ospath.exists(".netrc"):
     with open(".netrc", "w"):
         pass
 srun(["chmod", "600", ".netrc"])
 srun(["cp", ".netrc", "/root/.netrc"])
 srun(["chmod", "+x", "aria.sh"])
-srun("./aria.sh", shell=True)
+try:
+    srun("./aria.sh", shell=True)
+except FileNotFoundError:
+    log_warning("Aria2c is not installed. Aria2c search plugins will not work.")
 if ospath.exists("accounts.zip"):
     if ospath.exists("accounts"):
         srun(["rm", "-rf", "accounts"])
@@ -848,44 +850,50 @@ def aria2c_init():
         log_error(f"Aria2c initializing error: {e}")
 
 
-Thread(target=aria2c_init).start()
-sleep(1.5)
+try:
+    Thread(target=aria2c_init).start()
+    sleep(1.5)
 
-aria2c_global = [
-    "bt-max-open-files",
-    "download-result",
-    "keep-unfinished-download-result",
-    "log",
-    "log-level",
-    "max-concurrent-downloads",
-    "max-download-result",
-    "max-overall-download-limit",
-    "save-session",
-    "max-overall-upload-limit",
-    "optimize-concurrent-downloads",
-    "save-cookies",
-    "server-stat-of",
-]
+    aria2c_global = [
+        "bt-max-open-files",
+        "download-result",
+        "keep-unfinished-download-result",
+        "log",
+        "log-level",
+        "max-concurrent-downloads",
+        "max-download-result",
+        "max-overall-download-limit",
+        "save-session",
+        "max-overall-upload-limit",
+        "optimize-concurrent-downloads",
+        "save-cookies",
+        "server-stat-of",
+    ]
 
-if not aria2_options:
-    aria2_options = aria2.client.get_global_option()
-else:
-    a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
-    aria2.set_global_options(a2c_glo)
+    if not aria2_options:
+        aria2_options = aria2.client.get_global_option()
+    else:
+        a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
+        aria2.set_global_options(a2c_glo)
+except Exception as e:
+    log_warning(f"Aria2c not connected: {e}")
 
-qb_client = get_client()
-if not qbit_options:
-    qbit_options = dict(qb_client.app_preferences())
-    del qbit_options["listen_port"]
-    for k in list(qbit_options.keys()):
-        if k.startswith("rss"):
-            del qbit_options[k]
-else:
-    qb_opt = {**qbit_options}
-    for k, v in list(qb_opt.items()):
-        if v in ["", "*"]:
-            del qb_opt[k]
-    qb_client.app_set_preferences(qb_opt)
+try:
+    qb_client = get_client()
+    if not qbit_options:
+        qbit_options = dict(qb_client.app_preferences())
+        del qbit_options["listen_port"]
+        for k in list(qbit_options.keys()):
+            if k.startswith("rss"):
+                del qbit_options[k]
+    else:
+        qb_opt = {**qbit_options}
+        for k, v in list(qb_opt.items()):
+            if v in ["", "*"]:
+                del qb_opt[k]
+        qb_client.app_set_preferences(qb_opt)
+except Exception as e:
+    log_warning(f"qBittorrent not connected: {e}")
 
 log_info("Creating client from BOT_TOKEN")
 bot = wztgClient(
